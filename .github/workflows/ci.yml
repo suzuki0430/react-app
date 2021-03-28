@@ -25,7 +25,7 @@ jobs:
       - run: npm install -g surge
       - name: Deploy to Staging
         if: github.event_name == 'push'
-        run: npx surge --project ./build --domain awesome-quiet.surge.sh
+        run: npx surge --project ./build --domain nervous-smoke.surge.sh
         env: #surgeの認証
           SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }} #surge whoamiで取得
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }} #surge tokenで取得
