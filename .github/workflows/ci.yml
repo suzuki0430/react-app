@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env: #surgeの認証
+      SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }} #surge whoamiで取得
+      SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }} #surge tokenで取得
     steps:
       - uses: actions/checkout@v2
       - name: Cache node_modules
@@ -42,14 +45,24 @@ jobs:
           path: build
       # - uses: actions/download-artifact
       # - run: npm install -g surge
+      - name: ZIP Assets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          zip -r build.zip ./build
+          zip -r coverage.zip ./coverage
       - name: Create a Release
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: npx semanic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deploy to Staging
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         run: npx surge --project ./build --domain nervous-smoke.surge.sh
-        env: #surgeの認証
-          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }} #surge whoamiで取得
-          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }} #surge tokenで取得
+      - name: Deploy to Production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: npx surge --project ./build --domain enormous-poison-prod.surge.sh
+      - name: Upload Coverage Reports
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: npx code-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
